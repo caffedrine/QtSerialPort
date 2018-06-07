@@ -6,11 +6,9 @@ SerialClient::SerialClient()
 
 SerialClient::~SerialClient()
 {
-	if(pSerialPort != Q_NULLPTR)
+    if(this->isOpen())
 	{
-		if(pSerialPort->isOpen())
-			pSerialPort->close();
-
+        this->disconnect();
 		delete pSerialPort;
 		pSerialPort = Q_NULLPTR;
 	}
@@ -29,13 +27,10 @@ void SerialClient::setLastError(QString error)
 bool SerialClient::connect(QString portName, BaudRate baudRate)
 {
 	//Make sure we are not already connected
-	if(pSerialPort != Q_NULLPTR || pSerialPort)
+    if(this->isOpen())
 	{
-		if(pSerialPort && pSerialPort->isOpen())
-			pSerialPort->close();
-
-		delete pSerialPort;
-		pSerialPort = Q_NULLPTR;
+        this->setLastError("Port must be gracefully closed before any reconnect attempt!");
+        return false;
 	}
 
 	if(portName.isEmpty())	//If you pass an empty name, pSerialPort will crash!
@@ -61,7 +56,7 @@ bool SerialClient::connect(QString portName, BaudRate baudRate)
 		pSerialPort->open(QIODevice::ReadWrite);
 
 		//Check if connection succeed
-		if(pSerialPort->isOpen())
+        if(this->isOpen())
 		{
 			//Clean buffers to throw away garbage from the wires - but it is now working :(
 			pSerialPort->flush();
@@ -83,15 +78,19 @@ bool SerialClient::connect(QString portName, BaudRate baudRate)
 
 bool SerialClient::disconnect()
 {
-	if(!pSerialPort)
+    if(pSerialPort == Q_NULLPTR)
 		return true;
 
 	pSerialPort->close();
+    pSerialPort->disconnect();
 
-	if(!pSerialPort->isOpen())
-		return true;
+    if(this->isOpen())
+        return false;
 
-	return false;
+    delete pSerialPort;
+    pSerialPort = Q_NULLPTR;
+
+    return true;
 }
 
 void SerialClient::connectionStatusChanged(QSerialPort::SerialPortError errNo)
@@ -106,18 +105,23 @@ void SerialClient::connectionStatusChanged(QSerialPort::SerialPortError errNo)
 	}
 }
 
-qint64 SerialClient::write(QString str)
+qint64 SerialClient::write(QByteArray writeData)
 {
-	if(pSerialPort == Q_NULLPTR)
-	{
-		this->setLastError("Not connected to serial port!");
-		return -1;
-	}
+    if(!this->isOpen())
+    {
+        this->setLastError("Port is not open for writing!");
+        return -1;
+    }
 
-	if( pSerialPort->isOpen() )
+    if(writeData.length() == 0)
+    {
+        this->setLastError("Invalid 0 length data to send!");
+        return -1;
+    }
+
+    if( this->isOpen() )
 	{
-		QByteArray writeData = str.toUtf8();
-		return pSerialPort->write( writeData );
+        return pSerialPort->write( writeData );
 	}
 	else
 	{
@@ -150,16 +154,18 @@ QList<QString> SerialClient::getSerialPorts()
 
 QString SerialClient::readString()
 {
+    if(!this->isOpen())
+    {
+        this->setLastError("Port is not oppened for reading!");
+        return "-1";
+    }
+
 	// Read data
 	static QByteArray byteArray;
 	byteArray += pSerialPort->readAll();
 
-	//we want to read all message not only chunks
-	if(!QString(byteArray).contains("\n"))
-		return "^_^";
-
 	//sanitize data
-	QString data = QString( byteArray ).remove("\r").remove("\n");
+    QString data = QString( byteArray );
 	byteArray.clear();
 
 	//Send it to visual console too
@@ -168,7 +174,24 @@ QString SerialClient::readString()
 
 bool SerialClient::isOpen()
 {
+    if(this->pSerialPort == Q_NULLPTR || this->pSerialPort == 0)
+        return false;
+
 	if(pSerialPort->isOpen() && pSerialPort->isWritable() && pSerialPort->isReadable())
 		return true;
 	return false;
+}
+
+qint64 SerialClient::read(char *buffer, qint64 maxLen)
+{
+    if(!this->isOpen())
+    {
+        this->setLastError("Port is not oppened for reading!");
+        return -1;
+    }
+
+    qint64 readBytes = pSerialPort->read(buffer, maxLen);
+    qDebug() << "RECV DATA (" << QString::number(readBytes) << " bytes) : " << QString::fromUtf8( buffer );
+
+    return readBytes;
 }

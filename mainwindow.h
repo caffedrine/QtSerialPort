@@ -21,11 +21,15 @@ public:
     void consoleLog(QString str);
 
 private slots:
+    void serialDataReceivingSlot();
+    void setSerialPortStatus(bool);
+
     void on_pushButton_updateList_clicked();
     void on_pushButton_connectSerialPort_clicked();
     void on_pushButton_disconnectSerialPort_clicked();
     void on_pushButton_Send_clicked();
     void on_pushButton_Clear_clicked();
+    void on_comboBox_BaudRates_currentIndexChanged(int index);
 
 private:
     Ui::MainWindow *ui;

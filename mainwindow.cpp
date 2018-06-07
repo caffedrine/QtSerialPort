@@ -6,6 +6,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    this->ui->comboBox_BaudRates->addItems({"1200", "2400", "4800", "9600", "14400", "19200", "38400", "57600", "115200"});
+    this->ui->comboBox_BaudRates->setCurrentIndex(3);
+    this->baud = QSerialPort::Baud9600;
 }
 
 MainWindow::~MainWindow()
@@ -38,10 +42,10 @@ void MainWindow::on_pushButton_connectSerialPort_clicked()
     if(serialPort != Q_NULLPTR)
     {
         if(serialPort->isOpen())
-            serialPort->disconnect();
-
-        delete serialPort;
-        serialPort = Q_NULLPTR;
+        {
+            consoleLog("ERROR: You must disconnect first!");
+            return;
+        }
     }
 
     serialPort = new SerialClient();
@@ -53,7 +57,7 @@ void MainWindow::on_pushButton_connectSerialPort_clicked()
 
     if(serialPort->connect(portName, this->baud))
     {
-        this->consoleLog("SUCCESS: You're now connected to serial port!!");
+        this->consoleLog("SUCCESS: CONNECTED!!1");
     }
     else
     {
@@ -68,15 +72,24 @@ void MainWindow::on_pushButton_connectSerialPort_clicked()
 
 void MainWindow::on_pushButton_disconnectSerialPort_clicked()
 {
-    if(serialPort == Q_NULLPTR || !serialPort)
+    if(serialPort == Q_NULLPTR || serialPort == 0 || !this->serialPort->isOpen())
     {
         this->consoleLog("FAILED: You're not connected to serial port!");
         return;
-    }
+    }    
 
-    if(this->serialPort->disconnect())
+    if(this->serialPort->isOpen())
     {
-        this->consoleLog("SUCCESS: DISCONNECTED!");
+        if(this->serialPort->disconnect())
+        {
+            this->consoleLog("SUCCESS: DISCONNECTED!");
+            this->setSerialPortStatus(false);
+        }
+        else
+        {
+            this->consoleLog("FAILED: " + serialPort->getLastError());
+            return;
+        }
     }
     else
     {
@@ -97,12 +110,12 @@ void MainWindow::on_pushButton_Send_clicked()
         return;
     }
 
-    QString sendStr = ui->lineEditData->text();
+    QByteArray sendStr =  ui->lineEditData->text().toUtf8();
 
     qint64 bytesWritten = serialPort->write(sendStr);
     if( bytesWritten > 0)
     {
-        QString dbgStr = "SUCCESS SEND (" + QString::number(bytesWritten) + "bytes): " + sendStr;
+        QString dbgStr = "SEND (" + QString::number(bytesWritten) + "bytes): " + sendStr;
         this->consoleLog(dbgStr);
     }
     else
@@ -114,4 +127,22 @@ void MainWindow::on_pushButton_Send_clicked()
 void MainWindow::on_pushButton_Clear_clicked()
 {
     ui->lineEditData->clear();
+}
+
+void MainWindow::setSerialPortStatus(bool connected)
+{
+    this->ui->connectionStatusLabel->setText( connected==true?("CONNECTED"):("NOT CONNECTED") );
+}
+
+void MainWindow::serialDataReceivingSlot()
+{
+    char buffer[64] = {0};
+    qint64 readBytes = serialPort->read(buffer, sizeof(buffer));
+
+    consoleLog("RECV (" + QString::number(readBytes) + " bytes): " + buffer);
+}
+
+void MainWindow::on_comboBox_BaudRates_currentIndexChanged(int index)
+{
+    this->baud = (SerialClient::BaudRate)index;
 }

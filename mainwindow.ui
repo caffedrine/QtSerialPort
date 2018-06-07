@@ -30,7 +30,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>60</y>
+       <y>90</y>
        <width>181</width>
        <height>21</height>
       </rect>
@@ -75,12 +75,12 @@
       <string>Status:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="arduinoConnectionStatusLabel">
+    <widget class="QLabel" name="connectionStatusLabel">
      <property name="geometry">
       <rect>
        <x>70</x>
        <y>180</y>
-       <width>121</width>
+       <width>131</width>
        <height>21</height>
       </rect>
      </property>
@@ -106,6 +106,22 @@
      </property>
      <property name="text">
       <string>Connect</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="comboBox_BaudRates">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>60</y>
+       <width>181</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="currentText">
+      <string/>
+     </property>
+     <property name="currentIndex">
+      <number>-1</number>
      </property>
     </widget>
    </widget>

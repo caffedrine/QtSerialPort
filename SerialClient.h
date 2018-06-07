@@ -29,8 +29,8 @@ public:
 	bool connect(QString portName, BaudRate baudRate);
 	bool disconnect();
 
-	qint64 write(QString str);
-	qint64 read();	//not implemented yet
+    qint64 write(QByteArray data);
+    qint64 read(char *buffer, qint64 max_len);	//not implemented yet
 	QString readString();
 	static QList<QString> getSerialPorts();
 	bool isOpen();
