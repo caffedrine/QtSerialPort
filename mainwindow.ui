@@ -14,8 +14,8 @@
    <string>Simple Serial Terminal @ Ciocirtaaaaaaa</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="icon.qrc">
-    <normaloff>:/icon.jpg</normaloff>:/icon.jpg</iconset>
+   <iconset resource="res/resources.qrc">
+    <normaloff>:/icon.ico</normaloff>:/icon.ico</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QGroupBox" name="groupBox_SerialConnection">
@@ -256,7 +256,7 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="icon.qrc"/>
+  <include location="res/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

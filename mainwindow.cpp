@@ -179,7 +179,7 @@ void MainWindow::serialDataReceivingSlot()
     {
         QString resultHex;
         for(qint64 i = 0; i < recvBytes; ++i)
-            resultHex += QString("%1 ").arg(bytesToSend[i], 2, 16, QChar('0')).toUpper().remove("FFFFFFFFFFFFFF");
+            resultHex += QString("%1 ").arg(recvBuffer[i], 2, 16, QChar('0')).toUpper().remove("FFFFFFFFFFFFFF");
 
         resultHex.chop(1);
         consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + resultHex);
