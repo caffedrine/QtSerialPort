@@ -167,7 +167,7 @@
     <property name="title">
      <string>Data</string>
     </property>
-    <widget class="QRadioButton" name="radioButton">
+    <widget class="QRadioButton" name="radioButton_String">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -183,7 +183,7 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QRadioButton" name="radioButton_2">
+    <widget class="QRadioButton" name="radioButton_Hex">
      <property name="geometry">
       <rect>
        <x>90</x>

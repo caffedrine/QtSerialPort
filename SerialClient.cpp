@@ -191,7 +191,5 @@ qint64 SerialClient::read(char *buffer, qint64 maxLen)
     }
 
     qint64 readBytes = pSerialPort->read(buffer, maxLen);
-    qDebug() << "RECV DATA (" << QString::number(readBytes) << " bytes) : " << QString::fromUtf8( buffer );
-
     return readBytes;
 }

@@ -99,7 +99,7 @@ void MainWindow::on_pushButton_disconnectSerialPort_clicked()
 
 void MainWindow::consoleLog(QString str)
 {
-    this->ui->testEditSerialConsole->append("[" + QTime::currentTime().toString() + "] " +  str);
+    this->ui->testEditSerialConsole->append("[" + QTime::currentTime().toString("hh:mm:ss.zzz") + "] " +  str);
 }
 
 void MainWindow::on_pushButton_Send_clicked()
@@ -110,18 +110,49 @@ void MainWindow::on_pushButton_Send_clicked()
         return;
     }
 
-    QByteArray sendStr =  ui->lineEditData->text().toUtf8();
-
-    qint64 bytesWritten = serialPort->write(sendStr);
-    if( bytesWritten > 0)
+    /* Get data from user interface parse it*/
+    QByteArray bytesToSend;
+    if(ui->radioButton_Hex->isChecked() == true)
     {
-        QString dbgStr = "SEND (" + QString::number(bytesWritten) + "bytes): " + sendStr;
-        this->consoleLog(dbgStr);
+        bytesToSend = QByteArray::fromHex ( ui->lineEditData->text().remove(" ").toLatin1() );
+    }
+    else if(ui->radioButton_String->isChecked() == true)
+    {
+        bytesToSend = ui->lineEditData->text().toUtf8();
     }
     else
     {
-        this->consoleLog("FAILED: " + serialPort->getLastError());
+        this->consoleLog("FAILED: No data format selected");
+        return;
     }
+
+    /* Try send data via serial */
+    qint64 bytesWritten = serialPort->write(bytesToSend);
+
+    /* Check how many bytes were actually written */
+    if( bytesWritten <= 0)
+    {
+        this->consoleLog("FAILED: " + serialPort->getLastError());
+        return;
+    }
+
+    /* Display a warning if not all bytes were send */
+    if(bytesWritten != bytesToSend.length())
+    {
+        QMessageBox::warning(this, "WARNING", "Only " + QString::number(bytesWritten) + " / " + QString::number(bytesToSend.length()) + " bytes were send!");
+    }
+
+    /* Display send data */
+    QString dbgStr = "SEND (" + QString::number(bytesWritten) + "bytes): ";
+
+    //dbgStr += QString( bytesToSend.toHex() );
+
+    for(int i = 0; i < bytesWritten; ++i)
+        dbgStr += QString("%1 ").arg(bytesToSend[i], 2, 16, QChar('0')).toUpper().remove("FFFFFFFFFFFFFF");
+    dbgStr.chop(1);
+
+    /* Send text to console */
+    this->consoleLog(dbgStr);
 }
 
 void MainWindow::on_pushButton_Clear_clicked()
@@ -136,10 +167,27 @@ void MainWindow::setSerialPortStatus(bool connected)
 
 void MainWindow::serialDataReceivingSlot()
 {
-    char buffer[64] = {0};
-    qint64 readBytes = serialPort->read(buffer, sizeof(buffer));
+    char recvBuffer[128] = {0};
+    qint64 recvBytes = serialPort->read(recvBuffer, 128);
 
-    consoleLog("RECV (" + QString::number(readBytes) + " bytes): " + buffer);
+    /* Select format do display data on console */
+    if( ui->radioButton_String->isChecked() == true )
+    {
+        consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + recvBuffer);
+    }
+    else if(ui->radioButton_Hex->isChecked() == true)
+    {
+        QString resultHex;
+        for(qint64 i = 0; i < recvBytes; ++i)
+            resultHex += QString("%1 ").arg(bytesToSend[i], 2, 16, QChar('0')).toUpper().remove("FFFFFFFFFFFFFF");
+
+        resultHex.chop(1);
+        consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + resultHex);
+    }
+    else
+    {
+        consoleLog("Output format not selected!");
+    }
 }
 
 void MainWindow::on_comboBox_BaudRates_currentIndexChanged(int index)
