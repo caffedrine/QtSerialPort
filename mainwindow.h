@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QTimer>
 #include <QTime>
 
 #include "SerialClient.h"

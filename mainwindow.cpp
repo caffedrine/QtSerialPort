@@ -167,22 +167,68 @@ void MainWindow::setSerialPortStatus(bool connected)
 
 void MainWindow::serialDataReceivingSlot()
 {
-    char recvBuffer[128] = {0};
-    qint64 recvBytes = serialPort->read(recvBuffer, 128);
+    /* Received data/chunk info */
+    const char *recvBuffer;
+    qint64 recvBytes = 0;
+
+    if(ui->radioButton_displayRAW->isChecked() == true || ui->radioButton_displayChunks->isChecked() == true)
+    {
+        char tmp[1024] = {0};
+        recvBytes = serialPort->read(tmp, sizeof(recvBuffer));
+        recvBuffer = tmp;
+    }
+    else if(ui->radioButton_displayNewlines->isChecked() == true)
+    {
+        QString recvStr = serialPort->readLine().remove('\r').remove('\n');
+        recvBuffer = recvStr.toLocal8Bit().constData();
+        recvBytes = strlen(recvBuffer);
+    }
+    else if(ui->radioButton_displayStrings->isChecked() == true)
+    {
+        QString recvStr = serialPort->readString().remove('\r').remove('\n');
+        recvBuffer = recvStr.toLocal8Bit().constData();
+        recvBytes = strlen(recvBuffer);
+    }
+    else
+    {
+        consoleLog("Select reading function!");
+    }
+
+    /* If no data was received just continue */
+    if( recvBytes == 0 )
+        return;
 
     /* Select format do display data on console */
     if( ui->radioButton_String->isChecked() == true )
     {
-        consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + recvBuffer);
+        if(ui->radioButton_displayRAW->isChecked() == true)
+        {
+            this->ui->testEditSerialConsole->moveCursor(QTextCursor::End);
+            this->ui->testEditSerialConsole->insertPlainText( recvBuffer );
+            this->ui->testEditSerialConsole->moveCursor(QTextCursor::End);
+        }
+        else
+        {
+            consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + recvBuffer );
+        }
     }
     else if(ui->radioButton_Hex->isChecked() == true)
     {
         QString resultHex;
         for(qint64 i = 0; i < recvBytes; ++i)
             resultHex += QString("%1 ").arg(recvBuffer[i], 2, 16, QChar('0')).toUpper().remove("FFFFFFFFFFFFFF");
-
         resultHex.chop(1);
-        consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + resultHex);
+
+        if(ui->radioButton_displayRAW->isChecked() == true)
+        {
+            this->ui->testEditSerialConsole->moveCursor(QTextCursor::End);
+            this->ui->testEditSerialConsole->insertPlainText( resultHex + " ");
+            this->ui->testEditSerialConsole->moveCursor(QTextCursor::End);
+        }
+        else
+        {
+            consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + resultHex);
+        }
     }
     else
     {

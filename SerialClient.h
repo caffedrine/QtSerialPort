@@ -7,6 +7,7 @@
 #include <QList>
 #include <QByteArray>
 #include <QDebug>
+#include <QTime>
 
 class SerialClient: public QObject
 {
@@ -30,8 +31,10 @@ public:
 	bool disconnect();
 
     qint64 write(QByteArray data);
-    qint64 read(char *buffer, qint64 max_len);	//not implemented yet
+    qint64 read(char *buffer, qint64 max_len);
 	QString readString();
+    QString readLine();
+
 	static QList<QString> getSerialPorts();
 	bool isOpen();
 

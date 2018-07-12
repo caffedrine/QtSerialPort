@@ -160,16 +160,95 @@ QString SerialClient::readString()
         return "-1";
     }
 
-	// Read data
-	static QByteArray byteArray;
-	byteArray += pSerialPort->readAll();
+    /* Read data */
+    QByteArray chunk;
+    static QByteArray recvBytes;
 
-	//sanitize data
-    QString data = QString( byteArray );
-	byteArray.clear();
+    if(pSerialPort->readChannelCount() <= 0)
+        return "" ;
 
-	//Send it to visual console too
-	return data;
+    /* Receive a chunk and then validate it */
+    chunk = pSerialPort->readAll();
+    if(chunk.length() <= 0)
+        return "";
+
+    /* Copy recv chunk in the static recvBuffer */
+    for(int i=0; i < chunk.length(); i++)
+    {
+            recvBytes.append(chunk.at(i));
+    }
+
+    /* Store data until a complete line is received */
+    bool foundNewline = false;
+    for(int i=0; i < chunk.length(); i++)
+    {
+        if(chunk.at(i) == '\0')
+        {
+            foundNewline = true;
+            break;
+        }
+    }
+    if(!foundNewline)
+        return "";
+
+    /* Store recv line and clear recv buffer for further readings */
+    QString line = QString( recvBytes );
+
+    recvBytes.clear();
+
+    /* Return line */
+    return line;
+}
+
+QString SerialClient::readLine()
+{
+    if(!this->isOpen())
+    {
+        this->setLastError("Port is not oppened for reading!");
+        return "-1";
+    }
+
+    /* Read data */
+    QByteArray chunk;
+    static QByteArray recvBytes;
+
+    if(pSerialPort->readChannelCount() <= 0)
+        return "" ;
+
+    /* Receive a chunk and then validate it */
+    chunk = pSerialPort->readLine();
+    if(chunk.length() <= 0)
+        return "";
+
+    /* Copy recv chunk in the static recvBuffer */
+    for(int i=0; i < chunk.length(); i++)
+    {
+        if(chunk.at(i) != '\x00')           /* Ignore string termination */
+            recvBytes.append(chunk.at(i));
+    }
+
+    /* Store data until a complete line is received */
+    bool foundNewline = false;
+    for(int i=0; i < chunk.length(); i++)
+    {
+        if(chunk.at(i) == '\n')
+        {
+            foundNewline = true;
+            break;
+        }
+    }
+    if(!foundNewline)
+        return "";
+
+    /* Store recv line and clear recv buffer for further readings */
+    QString line = QString( recvBytes );
+
+    //qDebug() << recvBytes;
+
+    recvBytes.clear();
+
+    /* Return line */
+    return line;
 }
 
 bool SerialClient::isOpen()
@@ -193,3 +272,5 @@ qint64 SerialClient::read(char *buffer, qint64 maxLen)
     qint64 readBytes = pSerialPort->read(buffer, maxLen);
     return readBytes;
 }
+
+
