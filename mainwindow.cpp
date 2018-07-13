@@ -238,5 +238,5 @@ void MainWindow::serialDataReceivingSlot()
 
 void MainWindow::on_comboBox_BaudRates_currentIndexChanged(int index)
 {
-    this->baud = (SerialClient::BaudRate)index;
+    this->baud = (SerialClient::BaudRate) ui->comboBox_BaudRates->itemText(index).toInt();
 }

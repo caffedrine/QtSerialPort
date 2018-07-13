@@ -35,7 +35,7 @@ bool SerialClient::connect(QString portName, BaudRate baudRate)
 
 	if(portName.isEmpty())	//If you pass an empty name, pSerialPort will crash!
 	{
-		this->setLastError("Empty name!!!!! I HATE!!! empty names!!! Don't ever send me an empty name again! Empty names crash me :(!!!");
+        this->setLastError("Don't ever send me an empty name again! Empty names crash me :(!!!");
 		return false;
 	}
 
@@ -46,18 +46,20 @@ bool SerialClient::connect(QString portName, BaudRate baudRate)
 	QObject::connect(pSerialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(connectionStatusChanged(QSerialPort::SerialPortError)));
 	QObject::connect(pSerialPort, SIGNAL(readyRead()), this, SIGNAL(readyRead()));
 
-	//Setting connection params
-	pSerialPort->setPortName(portName);
-	pSerialPort->setBaudRate(baudRate);
 
-	try
+    /* Set serial port name */
+    pSerialPort->setPortName(portName);
+
+    try
 	{
 		//Open RW Sessions
-		pSerialPort->open(QIODevice::ReadWrite);
+        pSerialPort->open(QIODevice::ReadWrite);
+        /* Set baudrate */
+        pSerialPort->setBaudRate(baudRate);
 
 		//Check if connection succeed
         if(this->isOpen())
-		{
+		{            
 			//Clean buffers to throw away garbage from the wires - but it is now working :(
 			pSerialPort->flush();
 			pSerialPort->clear();
