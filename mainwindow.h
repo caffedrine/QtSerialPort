@@ -33,6 +33,8 @@ private slots:
     void on_pushButton_Clear_clicked();
     void on_comboBox_BaudRates_currentIndexChanged(int index);
 
+    void on_pushButton_ClearConsole_clicked();
+
 private:
     Ui::MainWindow *ui;
 

@@ -174,7 +174,7 @@ void MainWindow::serialDataReceivingSlot()
     if(ui->radioButton_displayRAW->isChecked() == true || ui->radioButton_displayChunks->isChecked() == true)
     {
         char tmp[1024] = {0};
-        recvBytes = serialPort->read(tmp, sizeof(recvBuffer));
+        recvBytes = serialPort->read(tmp, sizeof(tmp));
         recvBuffer = tmp;
     }
     else if(ui->radioButton_displayNewlines->isChecked() == true)
@@ -209,7 +209,7 @@ void MainWindow::serialDataReceivingSlot()
         }
         else
         {
-            consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + recvBuffer );
+            consoleLog("RECV (" + QString::number(recvBytes) + " bytes): " + QString::fromLocal8Bit(recvBuffer).replace("\r\n", "\n") );
         }
     }
     else if(ui->radioButton_Hex->isChecked() == true)
@@ -239,4 +239,9 @@ void MainWindow::serialDataReceivingSlot()
 void MainWindow::on_comboBox_BaudRates_currentIndexChanged(int index)
 {
     this->baud = (SerialClient::BaudRate) ui->comboBox_BaudRates->itemText(index).toInt();
+}
+
+void MainWindow::on_pushButton_ClearConsole_clicked()
+{
+    ui->testEditSerialConsole->clear();
 }
