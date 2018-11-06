@@ -173,7 +173,7 @@ void MainWindow::serialDataReceivingSlot()
 
     if(ui->radioButton_displayRAW->isChecked() == true || ui->radioButton_displayChunks->isChecked() == true)
     {
-        char tmp[1024] = {0};
+        char tmp[8192] = {0};
         recvBytes = serialPort->read(tmp, sizeof(tmp));
         recvBuffer = tmp;
     }
